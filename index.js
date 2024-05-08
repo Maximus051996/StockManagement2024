@@ -2,37 +2,29 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const https = require('https');
-const fs = require('fs').promises;
-const path = require('path');
-
+const http = require('http'); // Change to regular http module
+//const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-output.json');
 const userRoutes = require('./routes/userroute');
-
+const insCompany = require('./routes/ins-dashboard');
 const app = express();
+
+
 
 // Middleware
 app.use(cors({ credentials: true, origin: '*' }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(userRoutes);
+app.use(insCompany);
 
-// HTTPS Server Configuration
-async function createHttpsServer() {
-    try {
-        const [key, cert] = await Promise.all([
-            fs.readFile(path.join(__dirname, 'cert', 'key.pem')),
-            fs.readFile(path.join(__dirname, 'cert', 'cert.pem'))
-        ]);
 
-        const sslOptions = { key, cert };
-        const sslServer = https.createServer(sslOptions, app);
 
-        return sslServer;
-    } catch (err) {
-        console.error('Error reading certificate files:', err);
-        throw err;
-    }
-}
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+
 
 // Database Connection
 async function connectToDatabase() {
@@ -48,10 +40,10 @@ async function connectToDatabase() {
 // Start the server
 async function startServer() {
     try {
-        const sslServer = await createHttpsServer();
         await connectToDatabase();
-        sslServer.listen(3000, () => {
-            console.log('App started with SSL on port 3000');
+        const httpServer = http.createServer(app); // Create regular HTTP server
+        httpServer.listen(3000, () => {
+            console.log('App started on port 3000');
         });
     } catch (error) {
         console.error('Error starting server:', error);

@@ -3,10 +3,12 @@ const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const secret_key = 'EO["ZO!F9MD/1Qd'
+const { secret_key } = require('../constants/config');
+
 
 
 router.post('/register', async (req, res) => {
+    // #swagger.tags = ['User-Module']
     try {
         const { userName, roleId, phone, email, userPassword, address, companyAssigned } = req.body;
 
@@ -41,7 +43,10 @@ router.post('/register', async (req, res) => {
     }
 });
 
+
+
 router.post('/login', async (req, res) => {
+    // #swagger.tags = ['User-Module']
     const { userName, userPassword } = req.body;
 
     try {
@@ -58,7 +63,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign({ userId: user._id, roleId: user.roleId }, secret_key, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id, roleId: user.roleId, userName: user.userName }, secret_key, { expiresIn: '30m' });
 
         // Return token 
         res.status(200).json({ token });
