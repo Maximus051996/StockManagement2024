@@ -8,6 +8,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-output.json');
 const userRoutes = require('./routes/userroute');
 const insCompany = require('./routes/ins-dashboard');
+const companyRoutes = require('./routes/companyroute');
 const app = express();
 
 
@@ -18,6 +19,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(userRoutes);
 app.use(insCompany);
+app.use(companyRoutes);
 
 
 

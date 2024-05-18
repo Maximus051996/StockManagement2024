@@ -4,7 +4,8 @@ const mongoose = require('mongoose');
 const CompanySchema = new mongoose.Schema({
     companyId: String,
     companyName: String,
-    isActive: Boolean
+    createdDate: { type: Date, default: Date.now() },
+    updatedDate: { type: Date }
 }, { collection: 'tbl_company' });
 
 // Export User model

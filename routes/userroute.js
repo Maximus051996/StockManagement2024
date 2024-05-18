@@ -4,6 +4,7 @@ const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { secret_key } = require('../constants/config');
+const ErrorMessages = require('../enum/messages');
 
 
 
@@ -36,7 +37,7 @@ router.post('/register', async (req, res) => {
         // Save the user to the database
         await newUser.save();
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(200).json({ message: 'User registered successfully' });
     } catch (error) {
         console.error('Error registering user:', error);
         res.status(500).json({ message: 'Internal server error' });
@@ -53,13 +54,13 @@ router.post('/login', async (req, res) => {
         // Find the user by username
         const user = await User.findOne({ userName });
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: ErrorMessages.USER_NOT_FOUND_ERROR });
         }
 
         // Verify password
         const isPasswordValid = await bcrypt.compare(userPassword, user.userPassword);
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid password' });
+            return res.status(401).json({ message: ErrorMessages.INVALID_PASSWORD });
         }
 
         // Generate JWT token
@@ -68,8 +69,7 @@ router.post('/login', async (req, res) => {
         // Return token 
         res.status(200).json({ token });
     } catch (error) {
-        console.error('Error logging in:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: ErrorMessages.INTERNAL_SERVER_ERROR });
     }
 });
 

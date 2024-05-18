@@ -13,11 +13,9 @@ const msg = require('../enum/messages');
 router.get('/total-company-count', authenticateToken(['R2']), async (req, res) => {
     // #swagger.tags = ['Ins-Dashboard']
     try {
-        const activeCount = await Company.countDocuments({ isActive: true });
-        const inactiveCount = await Company.countDocuments({ isActive: false });
+        const activeCount = await Company.countDocuments();
         res.json({
             activecompanyCount: activeCount,
-            inactivecompanyCount: inactiveCount
         });
     } catch (error) {
         res.status(500).json({ error: msg.INTERNAL_SERVER_ERROR });
