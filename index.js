@@ -9,6 +9,7 @@ const swaggerDocument = require('./swagger-output.json');
 const userRoutes = require('./routes/userroute');
 const insCompany = require('./routes/ins-dashboard');
 const companyRoutes = require('./routes/companyroute');
+const ErrorMessages = require('./enum/messages');
 const app = express();
 
 
@@ -32,9 +33,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 async function connectToDatabase() {
     try {
         await mongoose.connect('mongodb+srv://smsAdmin:sms896152@clustersms.vjntvot.mongodb.net/db_stockManagementSystem?retryWrites=true&w=majority&appName=Clustersms');
-        console.log('Connected to MongoDB');
+        console.log(ErrorMessages.DB_CONNECT);
     } catch (error) {
-        console.error('Error connecting to MongoDB:', error);
         throw error;
     }
 }
@@ -45,10 +45,9 @@ async function startServer() {
         await connectToDatabase();
         const httpServer = http.createServer(app); // Create regular HTTP server
         httpServer.listen(3000, () => {
-            console.log('App started on port 3000');
+            console.log(ErrorMessages.SERVER_CONNECT);
         });
     } catch (error) {
-        console.error('Error starting server:', error);
         process.exit(1); // Exit the process with a non-zero status code
     }
 }

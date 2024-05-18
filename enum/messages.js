@@ -7,7 +7,9 @@ const ErrorMessages = {
     DELETE_RECORD_MESSAGE: 'Record deleted successfully',
     UPDATE_RECORD_MESSAGE: 'Record updated successfully',
     INVALID_PASSWORD: 'Invalid password',
-    USER_NOT_FOUND_ERROR: 'User not found'
+    USER_NOT_FOUND_ERROR: 'User not found',
+    DB_CONNECT: 'Connected to DB',
+    SERVER_CONNECT: 'Connected to SERVER'
 };
 
 
