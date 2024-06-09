@@ -3,13 +3,10 @@ const router = express.Router();
 const authenticateToken = require('../middleware/authMiddleware');
 const Company = require('../models/company');
 const User = require('../models/user');
-const Product = require('../models/product');
+const { Product, DamageProduct } = require('../models/product');
 const msg = require('../enum/messages');
 
 
-
-
-// Use authenticateToken middleware in your routes
 router.get('/total-company-count', authenticateToken(['R2']), async (req, res) => {
     // #swagger.tags = ['Ins-Dashboard']
     try {
@@ -37,8 +34,15 @@ router.get('/active-user-count', authenticateToken(['R2']), async (req, res) => 
 router.get('/damage-product-count', authenticateToken(['R2']), async (req, res) => {
     // #swagger.tags = ['Ins-Dashboard']
     try {
-        const productCount = await Product.countDocuments({ isdamage: true });
-        res.json({ productCount: productCount });
+        const totalQuantity = await DamageProduct.aggregate([
+            { $match: { isDeleted: false } },
+            { $group: { _id: null, totalQuantity: { $sum: "$quantity" } } }
+        ]);
+
+        // Handle case where there are no matching documents
+        const quantityCount = totalQuantity.length > 0 ? totalQuantity[0].totalQuantity : 0;
+
+        res.json({ productCount: quantityCount });
     } catch (error) {
         res.status(500).json({ error: msg.INTERNAL_SERVER_ERROR });
     }
@@ -46,7 +50,7 @@ router.get('/damage-product-count', authenticateToken(['R2']), async (req, res) 
 
 
 
-router.get('/top-five-productCountAsc-list', authenticateToken(['R2']), async (req, res) => {
+router.get('/all-productCount-totalQuantityDesc', authenticateToken(['R2']), async (req, res) => {
     // #swagger.tags = ['Ins-Dashboard']
     try {
         const topProducts = await Product.aggregate([
@@ -54,7 +58,7 @@ router.get('/top-five-productCountAsc-list', authenticateToken(['R2']), async (r
             {
                 $group: {
                     _id: "$companyId",
-                    totalQuantity: { $sum: "$quantity" }
+                    totalQuantity: { $sum: "$totalQuantity" }
                 }
             },
             // Lookup company details for each product
@@ -75,33 +79,11 @@ router.get('/top-five-productCountAsc-list', authenticateToken(['R2']), async (r
                     totalQuantity: 1,
                     companyName: "$company.companyName"
                 }
-            }
+            },
+            // Sort by total quantity in descending order
+            { $sort: { totalQuantity: -1 } },
         ]);
-
-        // Combine quantities for the same company
-        const combinedResult = {};
-        topProducts.forEach(product => {
-            if (!combinedResult[product.companyName]) {
-                combinedResult[product.companyName] = 0;
-            }
-            combinedResult[product.companyName] += product.totalQuantity;
-        });
-
-        // Sort the combined result by company name first
-        const sortedResult = Object.entries(combinedResult)
-            .map(([companyName, totalQuantity]) => ({ companyName, totalQuantity }))
-            .sort((a, b) => {
-                // Sort by company name
-                if (a.companyName < b.companyName) return -1;
-                if (a.companyName > b.companyName) return 1;
-                // If company names are equal, sort by total quantity in descending order
-                return b.totalQuantity - a.totalQuantity;
-            });
-
-        // Limit to top 5 products
-        const topFive = sortedResult.slice(0, 5);
-
-        res.json(topFive);
+        res.json(topProducts);
     } catch (error) {
         res.status(500).json({ error: msg.INTERNAL_SERVER_ERROR });
     }

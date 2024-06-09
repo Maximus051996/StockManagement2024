@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Define the schema
+// Define the product schema
 const productSchema = new mongoose.Schema({
     productId: {
         type: String,
@@ -14,39 +14,62 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    MRP: {
-        type: mongoose.Types.Decimal128,
+    productDetails: [{
+        selectedWarehouse: {
+            type: String,
+        },
+        mrp: {
+            type: Number,
+        },
+        defaultpercentage: {
+            type: Number
+        },
+        quantity: {
+            type: Number,
+        },
+        dOExpiry: {
+            type: Date,
+        }
+    }],
+    totalQuantity: {
+        type: Number,
+        required: true
+    }
+}, { collection: 'tbl_product' });
+
+
+// Define the damage product schema
+const damageProductSchema = new mongoose.Schema({
+    productId: {
+        type: String,
         required: true
     },
-    percentage: {
-        type: String
-    },
-    formula: {
-        type: String
-    },
-    persondiscount: {
-        type: Map,
-        of: String
+    companyId: {
+        type: String,
+        required: true
     },
     quantity: {
-        type: mongoose.Schema.Types.Number,
+        type: Number,
+        required: true
+    },
+    mrp: {
+        type: Number,
         required: true
     },
     dOExpiry: {
         type: Date,
         required: true
     },
-    isdamage: {
+    isDeleted: {
         type: Boolean,
-        required: true
-    },
-    isActive: {
-        type: Boolean,
-        required: true
+        default: false
     }
-}, { collection: 'tbl_product' });
+}, { collection: 'tbl_damageProduct' });
+
 
 // Create a Mongoose model
 const Product = mongoose.model('Product', productSchema);
+const DamageProduct = mongoose.model('DamageProduct', damageProductSchema);
 
-module.exports = Product;
+// Export the models
+module.exports = { Product, DamageProduct };

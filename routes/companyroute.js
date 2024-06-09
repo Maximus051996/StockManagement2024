@@ -4,6 +4,7 @@ const Company = require('../models/company');
 const authenticateToken = require('../middleware/authMiddleware');
 const msg = require('../enum/messages');
 
+
 router.get('/company-details', authenticateToken(['R2', 'R1']), async (req, res) => {
     // #swagger.tags = ['Company-Module']
     try {
@@ -146,6 +147,65 @@ router.get('/company-details/:id', authenticateToken(['R2']), async (req, res) =
         res.status(500).json({ error: msg.INTERNAL_SERVER_ERROR });
     }
 });
+
+
+router.post('/import-companies', authenticateToken(['R2']), async (req, res) => {
+    // #swagger.tags = ['Company-Module']
+    try {
+        const companies = req.body;
+
+        // Validate required fields
+        if (!Array.isArray(companies) || companies.length === 0) {
+            return res.status(400).json({ error: msg.MANDATORY_FIELDS_ERROR });
+        }
+
+        const lastCompany = await Company.findOne().sort({ createdDate: -1 });
+
+        // Increment companyId
+        let nextCompanyIdNumber = 1; // Default value if no companies exist
+        if (lastCompany) {
+            const lastCompanyId = lastCompany.companyId;
+            nextCompanyIdNumber = parseInt(lastCompanyId.slice(1)) + 1; // Extract the number from the companyId and increment
+        }
+
+        const newCompanies = [];
+        const duplicateCompanies = [];
+
+        // Check for duplicates and prepare new company objects
+        for (const company of companies) {
+            const { companyName } = company;
+
+            // Check for duplicate companyName
+            const existingCompany = await Company.findOne({ companyName });
+
+            if (existingCompany) {
+                duplicateCompanies.push({ companyName, isDuplicate: true });
+            } else {
+                newCompanies.push({
+                    companyId: 'C' + nextCompanyIdNumber++,
+                    companyName,
+                    createdDate: new Date(),
+                    updatedDate: null
+                });
+            }
+        }
+
+        // Save new companies if there are any
+        if (newCompanies.length > 0) {
+            await Company.insertMany(newCompanies);
+        }
+
+        // Respond with success message and duplicates information
+        res.status(200).json({
+            message: newCompanies.length > 0 ? msg.ADD_RECORD_MESSAGE : msg.DUBLICATE_ERROR,
+            duplicates: duplicateCompanies
+        });
+    } catch (error) {
+        // Handle errors
+        res.status(500).json({ error: msg.INTERNAL_SERVER_ERROR });
+    }
+});
+
 
 
 module.exports = router;
